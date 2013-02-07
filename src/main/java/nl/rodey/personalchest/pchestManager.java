@@ -139,7 +139,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Single Chest");
 			}
 
-    		return saveLegacySingleChest(chestContents, block, personalChestFolder);
+    		return saveBetaSingleChest(chestContents, block, personalChestFolder);
 		}
 		else
 		{
@@ -148,7 +148,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Double Chest");
 			}
         	
-        	return saveLegacyDoubleChest(chestContents, block, personalChestFolder);
+        	return saveBetaDoubleChest(chestContents, block, personalChestFolder);
 		}
 	}
 

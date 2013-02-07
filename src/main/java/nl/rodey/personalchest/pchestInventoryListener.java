@@ -106,7 +106,7 @@ public class pchestInventoryListener implements Listener {
 	
 		    	if(plugin.debug)
 				{ 
-					log.info("["+plugin.getDescription().getName()+"] Opened Block Location" + blockInfo[0] +" - "+ blockInfo[1] +" - "+ blockInfo[2] +" - "+ blockInfo[3]);
+					log.info("["+plugin.getDescription().getName()+"] Opened Block Location" + blockInfo[0] +" - "+ blockInfo[1] +" - "+ blockInfo[2]);
 				}
 	
 		    	World worldName = plugin.getServer().getWorld(totInfo[0]);
