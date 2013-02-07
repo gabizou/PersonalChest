@@ -7,15 +7,6 @@
 	<name>PersonalChest</name>
 	<description>Per player chest plugin for Bukkit</description>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
-		<resources>
-			<resource>
-				<directory>src</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -53,6 +44,11 @@
 			<groupId>com.sk89q</groupId>
 			<artifactId>worldguard</artifactId>
 			<version>5.6.6-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.residence</groupId>
+			<artifactId>Residence</artifactId>
+			<version>2.6.6.2</version>
 		</dependency>
 	</dependencies>
 </project>

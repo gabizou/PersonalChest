@@ -78,7 +78,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Single Chest");
 			}
 
-    		return saveSingleChest(chestContents, block, worldDataFolder);
+    		return saveLegacySingleChest(chestContents, block, worldDataFolder);
 		}
 		else
 		{
@@ -87,7 +87,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Double Chest");
 			}
         	
-        	return createDoubleChest(block, worldDataFolder);
+        	return createLegacyDoubleChest(block, worldDataFolder);
 		}
 
 	}
@@ -136,7 +136,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Single Chest");
 			}
 
-    		return saveSingleChest(chestContents, block, personalChestFolder);
+    		return saveLegacySingleChest(chestContents, block, personalChestFolder);
 		}
 		else
 		{
@@ -145,7 +145,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Double Chest");
 			}
         	
-        	return saveDoubleChest(chestContents, block, personalChestFolder);
+        	return saveLegacyDoubleChest(chestContents, block, personalChestFolder);
 		}
 	}
 
@@ -321,7 +321,7 @@ public class pchestManager {
 		// Set the chest to opened
 		setChestOpened(block, player);
 		
-    	String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
+		String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
 		String blockWorldName = block.getWorld().getName();
 		
 		boolean complete = false;
@@ -1122,7 +1122,7 @@ public class pchestManager {
 		}
 	}
 	
-	public boolean saveSingleChest(ItemStack[] chestContents, Block block, File dataFolder)
+	public boolean saveLegacySingleChest(ItemStack[] chestContents, Block block, File dataFolder)
 	{
     	String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
 		String blockWorldName = block.getWorld().getName();
@@ -1175,7 +1175,7 @@ public class pchestManager {
 		}
 	}
 	
-	public boolean createDoubleChest(Block block, File dataFolder)
+	public boolean createLegacyDoubleChest(Block block, File dataFolder)
 	{
 		Chest chest = (Chest) block.getState();
 		Inventory inv = chest.getInventory();
@@ -1293,8 +1293,7 @@ public class pchestManager {
 		}
 	}
 
-	
-	public boolean saveDoubleChest(ItemStack[] chestContents, Block block, File dataFolder)
+	public boolean saveLegacyDoubleChest(ItemStack[] chestContents, Block block, File dataFolder)
 	{
 		Chest chest = (Chest) block.getState();
 		Inventory inv = chest.getInventory();
