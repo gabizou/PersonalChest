@@ -81,7 +81,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Single Chest");
 			}
 
-    		return saveLegacySingleChest(chestContents, block, worldDataFolder);
+    		return saveBetaSingleChest(chestContents, block, worldDataFolder);
 		}
 		else
 		{
@@ -90,7 +90,7 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Saved Double Chest");
 			}
         	
-        	return createLegacyDoubleChest(block, worldDataFolder);
+        	return createBetaDoubleChest(block, worldDataFolder);
 		}
 
 	}
@@ -2008,4 +2008,113 @@ public class pchestManager {
         return true;
     }
 
+    /**
+     * Creates a PersonalChest for a double chest.
+     * @param block
+     * @param dataFolder
+     * @return
+     */
+    public boolean createBetaDoubleChest(Block block, File dataFolder)
+    {
+        Chest chest = (Chest) block.getState();
+        Inventory inv = chest.getInventory();
+
+        String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
+        String blockWorldName = block.getWorld().getName();
+
+        // Delete remove file when created
+        File worldDataFolderRemoved = new File(plugin.getDataFolder().getAbsolutePath(), "chests/Worlds/"+ blockWorldName+ "/REMOVED");                      
+        File chestFileRemoved = new File(worldDataFolderRemoved , blockFilename + ".chest");
+
+        if (chestFileRemoved.exists())
+        {
+            chestFileRemoved.delete();
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Removed File is deleted");
+            }           
+        }           
+
+        Block block2 = getDoubleChest(block);
+        //Chest chest2 = (Chest) block2.getState();
+        //Inventory inv2 = chest2.getInventory();
+
+        String blockFilename2 = block2.getX()+"_"+block2.getY()+"_"+block2.getZ();
+        String blockWorldName2 = block2.getWorld().getName();
+
+        // Delete remove file when created
+        File worldDataFolderRemoved2 = new File(plugin.getDataFolder().getAbsolutePath(), "chests/Worlds/"+ blockWorldName2+ "/REMOVED");                        
+        File chestFileRemoved2 = new File(worldDataFolderRemoved2 , blockFilename2 + ".chest");
+
+        if (chestFileRemoved2.exists())
+        {
+            chestFileRemoved2.delete(); 
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Removed File is deleted");
+            }       
+        }   
+
+        ItemStack[] chestContents1 = inv.getContents();
+        //ItemStack[] chestContents2 = inv2.getContents();
+
+        if(checkOtherChestPosition(block, block2) == "RIGHT")
+        {
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Other Chest is on the RIGHT side");
+            }
+        }
+        else
+        {
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Other Chest is on the LEFT side");
+            }
+        }
+
+        try {
+            final File chestFile = new File(dataFolder , blockFilename + ".chest");
+            if (chestFile.exists())
+                chestFile.delete();
+            chestFile.createNewFile();
+
+            FileConfiguration chestYML = YamlConfiguration.loadConfiguration(chestFile);
+            chestYML.set("ChestContents", chestContents1);
+            try {
+                chestYML.save(chestFile);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            // Save Chest 2
+            final File chestFile2 = new File(dataFolder , blockFilename2 + ".chest");
+            if (chestFile2.exists())
+                chestFile2.delete();
+            FileConfiguration chestYML2 = YamlConfiguration.loadConfiguration(chestFile);
+            chestYML2.set("ChestContents", chestContents);
+            try {
+                chestYML2.save(chestFile2);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Chest created!");
+            }
+
+            //Clear inventory
+            inv.clear();
+
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return false;
+        }
+    }
 }
