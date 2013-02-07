@@ -299,7 +299,7 @@ public class pchestManager {
 	        	
 	        	if(ResidencePlugin != null)
 	        	{
-					ClaimedResidence res = Residence.getResidenceManger().getByLoc(loc);
+					ClaimedResidence res = Residence.getResidenceManager().getByLoc(loc);
 					
 					if ( (res.getName().equalsIgnoreCase(regionName)) && (res.getWorld().equalsIgnoreCase(world.getName())) ) 
 					{

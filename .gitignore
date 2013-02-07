@@ -2,13 +2,7 @@
 .DS_Store
 
 .classpath
-
-bin/nl/rodey/personalchest/pchestPlayerListener.class
-
-bin/nl/rodey/personalchest/pchestCommand.class
-
-bin/nl/rodey/personalchest/pchestEntityListener.class
-
-bin/nl/rodey/personalchest/pchestBlockListener.class
-
+bin/
 .gitignore
+/target
+/.settings
