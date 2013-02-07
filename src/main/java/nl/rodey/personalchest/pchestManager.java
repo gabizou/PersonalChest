@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -18,6 +19,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentWrapper;
 import org.bukkit.entity.Player;
@@ -399,7 +402,14 @@ public class pchestManager {
 				log.info("["+plugin.getDescription().getName()+"] Load Single Chest");
 			}
 
-			complete = loadSingleChest(newInv, personalchestFile);
+        	    boolean legacy = chestFileParser(personalchestFile);
+            if(legacy) {
+                loadLegacySingleChest(newInv, personalchestFile);
+                convertLegacyToBetaSingleChest(newInv, personalchestFile);
+                complete = loadBetaSingleChest(newInv, personalchestFile);
+            } else {
+                complete = loadBetaSingleChest(newInv, personalchestFile);
+            }
 		}
 		else
 		{
@@ -429,7 +439,14 @@ public class pchestManager {
 			{ 
 				log.info("["+plugin.getDescription().getName()+"] Load Double Chest");
 			}
-			complete = loadDoubleChest(newInv, personalchestFile, personalChestFolder, block);
+        	    boolean legacy = chestFileParser(personalchestFile);
+            if(legacy) {
+                loadLegacyDoubleChest(newInv, personalchestFile, personalChestFolder, block);
+                convertLegacyToBetaDoubleChest(newInv, personalchestFile);
+                complete = loadBetaDoubleChest(newInv, personalchestFile, personalChestFolder, block);
+            } else {
+                complete = loadBetaSingleChest(newInv, personalchestFile);
+            }
 		}
 		
 		return complete;		
@@ -495,7 +512,7 @@ public class pchestManager {
 			{ 
 				log.info("["+plugin.getDescription().getName()+"] Load Double Chest");
 			}
-        	loadDoubleChest(newInv, chestFile, worldDataFolder, block);
+        	loadLegacyDoubleChest(newInv, chestFile, worldDataFolder, block);
 		}
 		else
 		{
@@ -503,7 +520,7 @@ public class pchestManager {
 			{ 
 				log.info("["+plugin.getDescription().getName()+"] Load Single Chest");
 			}
-			loadSingleChest(newInv, chestFile);		
+			loadLegacySingleChest(newInv, chestFile);		
 		}
 		
 		if(chestFile.delete())
@@ -909,6 +926,7 @@ public class pchestManager {
 						log.info("["+plugin.getDescription().getName()+"] " + line + " is the used player");
 					}
 					removeChestOpened(block, playerInFile);
+					in.close();
 					return false;
 				}
 				
@@ -939,6 +957,7 @@ public class pchestManager {
 							log.info("["+plugin.getDescription().getName()+"] Y: "+ chestRadiusYy + " < " + playerInFile.getLocation().getY() + " > " +chestRadiusyY );
 							log.info("["+plugin.getDescription().getName()+"] Z: "+ chestRadiusZz + " < " + playerInFile.getLocation().getZ() + " > " +chestRadiuszZ );
 						}
+						in.close();
 						return true;
 					}
 					else
@@ -1444,7 +1463,7 @@ public class pchestManager {
 	}
 	*/
 	
-	public boolean loadSingleChest(Inventory inv, File chestFile)
+	public boolean loadLegacySingleChest(Inventory inv, File chestFile)
 	{		
 		try {
 			
@@ -1501,7 +1520,7 @@ public class pchestManager {
 		}
 	}
 	
-	public boolean loadDoubleChest(Inventory inv, File chestFile, File dataFolder, Block block)
+	public boolean loadLegacyDoubleChest(Inventory inv, File chestFile, File dataFolder, Block block)
 	{
 		Block block2 = getDoubleChest(block);
 
@@ -1708,4 +1727,285 @@ public class pchestManager {
 			return "0";
 		}
 	}
+
+    /**
+     * Saves a single chest to file for the player
+     * @param chestContents2
+     * @param block
+     * @param dataFolder
+     * @return
+     */
+    public boolean saveBetaSingleChest(ItemStack[] chestContents, Block block, File dataFolder){
+        String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
+        String blockWorldName = block.getWorld().getName();
+
+        // Delete remove file when created
+        File worldDataFolderRemoved = new File(plugin.getDataFolder().getAbsolutePath(), "chests/Worlds/"+ blockWorldName+ "REMOVED");                      
+        File chestFileRemoved = new File(worldDataFolderRemoved , blockFilename + ".chest");
+
+        if (chestFileRemoved.exists())
+        {
+            chestFileRemoved.delete();      
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Removed File is deleted");
+            }           
+        }   
+
+        try {
+            final File chestFile = new File(dataFolder , blockFilename + ".chest");
+            if (chestFile.exists())
+                chestFile.delete();
+            chestFile.createNewFile();
+
+            FileConfiguration chestYML = YamlConfiguration.loadConfiguration(chestFile);
+            chestYML.set("ChestContents", chestContents);
+
+            chestYML.save(chestFile);
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Chest created!");
+            }
+
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            return false;
+        }
+
+    }
+
+    /**
+     * Saves a double chest inventory to file using YamlConfiguration and Serializes the inventory
+     * 
+     * @param chestContents
+     * @param block
+     * @param dataFolder
+     * @return
+     */
+    public boolean saveBetaDoubleChest(ItemStack[] chestContents, Block block, File dataFolder) {
+        Chest chest = (Chest) block.getState();
+        Inventory inv = chest.getInventory();
+
+        String blockFilename = block.getX()+"_"+block.getY()+"_"+block.getZ();
+
+        Block block2 = getDoubleChest(block);
+        Chest chest2 = (Chest) block2.getState();
+        Inventory inv2 = chest2.getInventory();
+
+        String blockFilename2 = block2.getX()+"_"+block2.getY()+"_"+block2.getZ();
+
+        int startPos1 = 0;
+        int endPos1 = 27;
+        int startPos2 = 27;
+        int endPos2 = 54;
+
+        if(checkOtherChestPosition(block, block2) == "RIGHT")
+        {
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Other Chest is on the RIGHT side");
+            }
+            startPos1 = 27;
+            endPos1 = 54;
+            startPos2 = 0;
+            endPos2 = 27;
+        }
+        else
+        {
+            if(plugin.debug)
+            { 
+                log.info("["+plugin.getDescription().getName()+"] Other Chest is on the LEFT side");
+            }
+
+        }
+
+        // Save Chest 1
+        final File chestFile = new File(dataFolder , blockFilename + ".chest");
+        if (chestFile.exists())
+            chestFile.delete();
+        FileConfiguration chestYML = YamlConfiguration.loadConfiguration(chestFile);
+        ItemStack[] chestContents1 = new ItemStack[28];
+        for(int i = startPos2; i<endPos2; i++) {
+            int n = 0;
+            chestContents1[n] = chestContents[i];
+        }
+        chestYML.set("ChestContents", chestContents1);
+        try {
+            chestYML.save(chestFile);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        // Save Chest 2
+        final File chestFile2 = new File(dataFolder , blockFilename2 + ".chest");
+        if (chestFile2.exists())
+            chestFile2.delete();
+        FileConfiguration chestYML2 = YamlConfiguration.loadConfiguration(chestFile);
+        ItemStack[] chestContents2 = new ItemStack[28];
+        for(int i=startPos1;i<endPos1;i++) {
+            int n=0;
+            chestContents2[n] = chestContents[i];
+        }
+        chestYML2.set("DoubleChest", true);
+        chestYML2.set("ChestContents", chestContents2);
+        try {
+            chestYML2.save(chestFile2);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        if(plugin.debug)
+        { 
+            log.info("["+plugin.getDescription().getName()+"] Chest created!");
+        }
+
+        //Clear inventory
+        inv.clear();
+        inv2.clear();
+
+        return true;
+
+    }
+
+    /**
+     * Converts the legacy double chest to the new YamlConfiguration format
+     * @param personalchestFile
+     */
+    private void convertLegacyToBetaDoubleChest(Inventory inv, File personalchestFile) {
+        FileConfiguration chestYml = YamlConfiguration.loadConfiguration(personalchestFile);
+        ItemStack[] inventory = inv.getContents();
+        chestYml.set("Chest-Contents", inventory);
+        try {
+            chestYml.save(personalchestFile);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+
+    /**
+     * Converts the legacy to new YamlConfiguration format
+     * @param personalchestFile
+     */
+    private void convertLegacyToBetaSingleChest(Inventory inv, File personalchestFile) {
+        personalchestFile.delete();
+        try {
+            personalchestFile.createNewFile();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        FileConfiguration chestYml = YamlConfiguration.loadConfiguration(personalchestFile);
+        ItemStack[] inventory = inv.getContents();
+        chestYml.set("Chest-Contents", inventory);
+        try {
+            chestYml.save(personalchestFile);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+
+    /**
+     * Checks whether the personalchest file is of legacy data format or of the new YamlConfiguration format.
+     * 
+     * @param inv : The inventory
+     * @param personalchestFile : The file being accessed
+     * @return true if this is a legacy chest file. False if this is a new YamlConfiguration file.
+     */
+    private boolean chestFileParser(File personalchestFile) {
+        boolean legacy = false;
+        try {
+            final BufferedReader in = new BufferedReader(new FileReader(personalchestFile));
+            String line = in.readLine();
+            if(!line.contains("ChestContents")) {
+                in.close();
+                legacy = true;
+            } else {
+                legacy = false;
+            }
+
+            in.close();
+
+        } catch (IOException e) {
+            //ignore
+        }
+
+        return legacy;
+    }
+
+    /** 
+     * Loads a single chest inventory from file
+     * @param inv
+     * @param chestFile
+     * @return
+     */
+    public boolean loadBetaSingleChest(Inventory inv, File chestFile) {
+
+        FileConfiguration chestYML = YamlConfiguration.loadConfiguration(chestFile);
+        ItemStack[] invStack;
+        @SuppressWarnings("unchecked")
+        List<ItemStack> chestContents = (List<ItemStack>) chestYML.getList("ChestContents");
+        invStack = chestContents.toArray(new ItemStack[chestContents.size()]);
+        inv.setContents(invStack);
+        return true;
+
+    }
+
+
+    /**
+     * Loads a double chest inventory from file.
+     * @param inv : The inventory being handled by PersonalChest
+     * @param chestFile : The file that the chest contents is located
+     * @param dataFolder : The folder that the chest contents is located
+     * @param block : The block of which the chest is being interacted with
+     * @return
+     */
+    public boolean loadBetaDoubleChest(Inventory inv, File chestFile, File dataFolder, Block block) {
+
+        Block block2 = getDoubleChest(block);
+
+        String blockFilename = block2.getX()+"_"+block2.getY()+"_"+block2.getZ();
+
+        File chestFile2 = new File(dataFolder , blockFilename + ".chest");
+
+
+        Chest chest = (Chest) block2.getState();
+        Inventory inv2 = chest.getInventory();
+
+        inv.clear();
+        inv2.clear();
+        ItemStack[] invStack;
+
+        // Load the first block of the chest
+        FileConfiguration chestYML = YamlConfiguration.loadConfiguration(chestFile);
+        @SuppressWarnings("unchecked")
+        List<ItemStack> chestContents = (List<ItemStack>) chestYML.getList("ChestContents");
+
+        // Load the second chest block
+        FileConfiguration chestYML2 = YamlConfiguration.loadConfiguration(chestFile2);
+        @SuppressWarnings("unchecked")
+        List<ItemStack> chestContents2 = (List<ItemStack>) chestYML2.getList("Chestcontents");
+
+        // Make a second list of chest contents
+        List<ItemStack> chestContentsFinal = chestContents;
+
+        // Add the second list of chest contents to the final list
+        chestContentsFinal.addAll(chestContents2);
+        invStack = (ItemStack[]) chestContentsFinal.toArray();
+
+        // Set the inventory to the new inventory array
+        inv.setContents(invStack);
+        return true;
+    }
+
 }

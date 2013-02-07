@@ -96,6 +96,7 @@ public class pchestInventoryListener implements Listener {
 				// Return if empty
 				if(line == null)
 				{
+				    in.close();
 					return null;
 				}
 				
@@ -114,7 +115,8 @@ public class pchestInventoryListener implements Listener {
 		    	int cordZ = Integer.parseInt(blockInfo[2]);
 		    	
 		    	Location location = new Location(worldName, cordX, cordY, cordZ);
-				return location;
+			in.close();	
+		    	return location;
 				
 			} catch (IOException e) {
 				e.printStackTrace();
